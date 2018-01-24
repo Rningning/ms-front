@@ -12,6 +12,7 @@
   "dependencies": {
     "axios": "^0.17.1",
     "element-ui": "^2.0.11",
+    "iview": "^2.9.0",
     "vue": "^2.5.2",
     "vue-easytable": "^1.6.5",
     "vue-router": "^3.0.1"

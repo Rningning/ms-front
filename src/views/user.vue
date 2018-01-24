@@ -8,24 +8,10 @@
                  @click="addDialogVisible = true">新增
       </el-button>
     </div>
-    <v-table
-      is-horizontal-resize
-      style="width:100%"
-      row-hover-color="#edf7ff"
-      odd-bg-color="#eee"
-      :height="470"
-      :columns="columns"
-      :table-data="tableData"
-      :show-vertical-border="false"
-      @on-custom-comp="customCompFunc"
-    ></v-table>
+    <i-table border stripe :columns="columns" :data="tableData"></i-table>
     <div class="pagination">
-      <v-pagination
-        @page-change="pageChange"
-        @page-size-change="pageSizeChange"
-        :total="total"
-        :layout="['total', 'prev', 'pager', 'next', 'sizer', 'jumper']"
-      ></v-pagination>
+      <Page :total="total" show-elevator show-sizer show-total @on-change="pageChange"
+            @on-page-size-change="pageSizeChange"></Page>
     </div>
     <el-dialog title="新增用户" :visible="addDialogVisible" width="30%" center>
       <el-form :model="form">
@@ -96,57 +82,71 @@
         username: null,
         columns: [
           {
-            field: 'custom',
             title: '序号',
-            width: 50,
-            titleAlign: 'center',
-            columnAlign: 'center',
-            isResize: true,
-            formatter: function (rowData, rowIndex, pagingIndex, field) {
-              return rowIndex + 1;
-            }
+            type: 'index',
+            width: 80,
+            align: 'center'
           },
           {
-            field: 'username',
             title: '用户名',
+            key: 'username',
             width: 100,
-            titleAlign: 'center',
-            columnAlign: 'center',
-            isResize: true /*宽度自适应*/
+            align: 'center'
           },
           {
-            field: 'password',
             title: '密码',
-            width: 260,
-            titleAlign: 'center',
-            columnAlign: 'center',
-            isResize: true
+            key: 'password',
+            width: 100,
+            align: 'center'
           },
           {
-            field: 'age',
             title: '年龄',
-            width: 330,
-            titleAlign: 'center',
-            columnAlign: 'center',
-            isResize: true
+            key: 'age',
+            width: 100,
+            align: 'center'
           },
           {
-            field: 'createTime',
             title: '创建时间',
-            width: 500,
-            titleAlign: 'center',
-            columnAlign: 'center',
-            isResize: true
+            key: 'createTime',
+            align: 'center'
           },
           {
-            field: 'custom-adv',
             title: '操作',
+            key: 'action',
             width: 200,
-            titleAlign: 'center',
-            columnAlign: 'center',
-            isResize: true,
-            // isFrozen: true,
-            componentName: 'table-operation'
+            align: 'center',
+            fixed: 'right',
+            render: (h, params) => {
+              return h('div', [
+                h('Button', {
+                  props: {
+                    type: 'primary',
+                    size: 'small',
+                    icon: 'edit'
+                  },
+                  style: {
+                    marginRight: '5px'
+                  },
+                  on: {
+                    click: () => {
+                      this.getUserById(params.row.id)
+                    }
+                  }
+                }, '编辑'),
+                h('Button', {
+                  props: {
+                    type: 'error',
+                    size: 'small',
+                    icon: 'trash-a'
+                  },
+                  on: {
+                    click: () => {
+                      this.deleteUser(params.row.id)
+                    }
+                  }
+                }, '删除')
+              ]);
+            }
           }
         ],
         addDialogVisible: false,
@@ -170,7 +170,7 @@
           pageNum: this.pageIndex,
           pageSize: this.pageSize
         };
-        if(this.username !== null){
+        if (this.username !== null) {
           params.username = this.username;
         }
         this.$http
@@ -223,7 +223,10 @@
           }
         })
       },
-      getUserById(params) {
+      getUserById(id) {
+        let params = {
+          id: id
+        }
         this.$http
           .get("/ms/user/getById", {params: params})
           .then((response) => {
@@ -256,7 +259,10 @@
           }
         })
       },
-      deleteUser(params) {
+      deleteUser(id) {
+        let params = {
+          id: id
+        }
         this.$http
           .delete("/ms/user/delete", {params: params})
           .then((response) => {
@@ -269,13 +275,6 @@
             }
             this.getUserPage();
           });
-      },
-      customCompFunc(params) {
-        if (params.type === 'delete') {
-          this.deleteUser({id: params.rowData['id']});
-        } else if (params.type === 'edit') {
-          this.getUserById({id: params.rowData['id']});
-        }
       }
     }
   }
