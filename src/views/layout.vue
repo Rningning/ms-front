@@ -69,6 +69,12 @@
                 icon: null,
                 index: "user",
                 subs: null
+              },
+              {
+                title: "表格管理",
+                icon: null,
+                index: "table",
+                subs: null
               }
             ]
           }

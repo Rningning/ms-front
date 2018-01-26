@@ -1,5 +1,10 @@
 <template>
   <div>
+    <el-breadcrumb separator-class="el-icon-arrow-right">
+      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item>系统管理</el-breadcrumb-item>
+      <el-breadcrumb-item>用户管理</el-breadcrumb-item>
+    </el-breadcrumb>
     <div class="toolbar">
       <el-input v-model="username" placeholder="用户名" class="handle-input"></el-input>
       <el-button type="primary" size="small" round icon="el-icon-search" @click="getUserPage">搜索</el-button>
@@ -8,7 +13,7 @@
                  @click="addDialogVisible = true">新增
       </el-button>
     </div>
-    <i-table border stripe :columns="columns" :data="tableData"></i-table>
+    <i-table stripe :columns="columns" :data="tableData" @on-expand="expand"></i-table>
     <div class="pagination">
       <Page :total="total" show-elevator show-sizer show-total @on-change="pageChange"
             @on-page-size-change="pageSizeChange"></Page>
@@ -70,17 +75,31 @@
   </div>
 </template>
 <script>
+  import expandRow from './user-expand.vue';
+
   export default {
     name: 'User',
     data() {
       return {
         isLoading: false,
         tableData: [],
+        expandData: [],
         // pageNum: 1,
-        // pageSize: 10,
+        pageSize: 20,
         total: 0,
         username: null,
         columns: [
+          {
+            type: 'expand',
+            width: 50,
+            render: (h, params) => {
+              return h(expandRow, {
+                props: {
+                  row: this.expandData
+                }
+              })
+            }
+          },
           {
             title: '序号',
             type: 'index',
@@ -115,7 +134,7 @@
             key: 'action',
             width: 200,
             align: 'center',
-            fixed: 'right',
+            // fixed: 'right',
             render: (h, params) => {
               return h('div', [
                 h('Button', {
@@ -164,6 +183,27 @@
       this.getUserPage();
     },
     methods: {
+      expand(row, status) {
+        if (status) {
+          let params = {
+            pageNum: this.pageIndex,
+            pageSize: this.pageSize
+          };
+          if (this.username !== null) {
+            params.username = this.username;
+          }
+          this.$http
+            .get("/ms/user/getPage", {params: params})
+            .then((response) => {
+              let data = response.data;
+              if (data.code === 0) {
+                this.isLoading = false;
+                this.total = data.data.total;
+                this.expandData = data.data.records;
+              }
+            });
+        }
+      },
       getUserPage() {
         this.isLoading = true;
         let params = {
@@ -180,7 +220,13 @@
             if (data.code === 0) {
               this.isLoading = false;
               this.total = data.data.total;
-              this.tableData = data.data.records;
+              let records = data.data.records;
+              for (let i = 0; i < records.length; i++) {
+                if (i % 2 === 0) {
+                  records[i]._disableExpand = true;
+                }
+              }
+              this.tableData = records;
             }
           });
       },
